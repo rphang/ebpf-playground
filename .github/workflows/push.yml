@@ -2,33 +2,35 @@ name: create-bin
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        architecture: ["linux/amd64", "linux/arm64"]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-            submodules: recursive
-      - name: Install dependencies
+          submodules: recursive
+      - uses: docker/setup-buildx-action@v3
+      - name: Build Docker image
         run: |
-          sudo apt-get update
-          sudo apt-get install -y clang llvm libelf-dev gcc-multilib linux-headers-$(uname -r) build-essential
-      - name: Setting up libbpf
+          docker buildx build --platform ${{ matrix.architecture }} -o type=local,dest=./docker .
+      - name: Reformat architecture name
+        id: reformat_architecture
         run: |
-          make -C lib/libbpf/src
-          sudo make -C lib/libbpf/src install
-      - name: Compile
-        run: |
-          make
+          echo "::set-output name=architecture::$(echo ${{ matrix.architecture }} | sed 's/\//-/g')"
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v2
         with:
-          name: evilbpf-bin-${{ github.sha }}
+          name: evilbpf-bin-${{ github.sha }}-${{ steps.reformat_architecture.outputs.architecture }}
           path: |
-            dst
+            docker/src/dst
+
+# This is so slow ... i hate ARM emul

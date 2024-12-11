@@ -1,6 +1,6 @@
 #ifndef __VMLINUX_H
 #define __VMLINUX_H
-#include <vmlinux.h>
+#include "vmlinux.h"
 #endif
 
 #ifndef __MAPS_BPF_H

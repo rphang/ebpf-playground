@@ -7,28 +7,11 @@ on:
 
 jobs:
   build:
+    needs: create-bin
     permissions: 
       contents: write
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-            submodules: recursive
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang llvm libelf-dev gcc-multilib linux-headers-$(uname -r) build-essential
-      - name: Setting up libbpf
-        run: |
-          make -C lib/libbpf/src
-          sudo make -C lib/libbpf/src install
-      - name: Compile
-        run: |
-          make
-      - name: Zipping artifacts
-        run: |
-          zip -r evilbpf-${{ github.ref_name }}.zip dst
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
@@ -36,8 +19,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          draft: false
+          release_name: evilBPF ${{ github.ref_name }}
+          draft: true
           prerelease: false
       - name: Upload release asset
         id: upload-release-asset

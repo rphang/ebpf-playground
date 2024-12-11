@@ -1,6 +1,7 @@
 ARCH 		?= $(shell uname -m|sed 's/x86_64/x86/'|sed 's/aarch64/arm/')
 LIBBPF_PATH  = $(ROOTDIR)/../lib/libbpf/src
 LIBBPF_FLAGS = -I$(LIBBPF_PATH) -L$(LIBBPF_PATH) -l:libbpf.a -lbpf
+LIBELF_FLAGS ?= $(shell pkg-config --static --libs libelf)
 COMMON_INCLUDES = -I.
 RELEASE_DIR  = $(ROOTDIR)/../dst
 
@@ -20,7 +21,7 @@ release: release_dest
 # Build application binary
 $(APPS): %: | $(APPS).skel.h libbpf $(OBJ)
 	$(call msg,BINARY,$@)
-	clang -Wall -O2 $@.c $(CFLAGS) $(OBJ) $(LIBBPF_FLAGS) -lelf -lz -o $@ -static
+	clang -Wall -O2 $@.c $(CFLAGS) $(OBJ) $(LIBBPF_FLAGS) $(LIBELF_FLAGS) -o $@ -static
 	strip $@
 
 # eBPF skeleton
